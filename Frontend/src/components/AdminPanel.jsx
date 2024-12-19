@@ -1,64 +1,79 @@
 import React, { useState, useEffect } from "react";
+import Sidebar from "./admin/Sidebar";
+import ProductForm from "./admin/ProductForm";
+import ProductList from "./admin/ProductList";
 
 const AdminPanel = () => {
   const [theme, setTheme] = useState("light");
   const [products, setProducts] = useState([]);
   const [product, setProduct] = useState({
-    title: "",
+    name: "",
     description: "",
-    image: "",
     price: "",
+    images: [],
+    rating: 0,
+    reviews: 0,
+    label: "",
   });
+
   const [isEditing, setIsEditing] = useState(false);
   const [editingIndex, setEditingIndex] = useState(null);
 
-  // Load products from localStorage when the component is mounted
   useEffect(() => {
-    const savedProducts = localStorage.getItem("products");
-    if (savedProducts) {
-      setProducts(JSON.parse(savedProducts));
-    }
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/admin");
+        if (!response.ok) throw new Error("Failed to fetch products");
+        const data = await response.json();
+        setProducts(data);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      }
+    };
+    fetchProducts();
   }, []);
-
-  // Save products to localStorage whenever the products array changes
-  useEffect(() => {
-    localStorage.setItem("products", JSON.stringify(products));
-  }, [products]);
 
   const handleThemeToggle = () => {
     setTheme(theme === "light" ? "dark" : "light");
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setProduct({ ...product, [name]: value });
-  };
+  const handleSubmit = async (formData) => {
+    const endpoint = isEditing
+      ? `http://localhost:5000/api/admin/update/${products[editingIndex]._id}`
+      : "http://localhost:5000/api/admin/add";
+    const method = isEditing ? "PUT" : "POST";
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    setProduct({ ...product, image: URL.createObjectURL(file) });
-  };
+    try {
+      const response = await fetch('http://localhost:5000/api/admin/add', {
+        method,
+        body: formData,
+      });
+      if (!response.ok) throw new Error("Failed to save product in admin");
+      const data = await response.json();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+      if (isEditing) {
+        const updatedProducts = [...products];
+        updatedProducts[editingIndex] = data;
+        setProducts(updatedProducts);
+      } else {
+        setProducts([...products, data]);
+      }
 
-    if (isEditing) {
-      const updatedProducts = [...products];
-      updatedProducts[editingIndex] = product;
-      setProducts(updatedProducts);
+      // Reset form and editing state
       setIsEditing(false);
       setEditingIndex(null);
-    } else {
-      setProducts([...products, product]);
+      setProduct({
+        name: "",
+        description: "",
+        price: "",
+        images: [],
+        rating: 0,
+        reviews: 0,
+        label: "",
+      });
+    } catch (error) {
+      console.error("Error saving product:", error);
     }
-
-    // Reset form
-    setProduct({
-      title: "",
-      description: "",
-      image: "",
-      price: "",
-    });
   };
 
   const handleEdit = (index) => {
@@ -68,154 +83,40 @@ const AdminPanel = () => {
     setEditingIndex(index);
   };
 
-  const handleDelete = (index) => {
-    const updatedProducts = products.filter((_, i) => i !== index);
-    setProducts(updatedProducts);
+  const handleDelete = async (index) => {
+    const productId = products[index]._id;
+    try {
+      await fetch(`http://localhost:5000/api/admin/delete/${productId}`, {
+        method: "DELETE",
+      });
+      setProducts(products.filter((_, i) => i !== index));
+    } catch (error) {
+      console.error("Error deleting product:", error);
+    }
   };
 
   return (
     <div
       className={`flex ${
-        theme === "light" ? "bg-white  text-black" : "bg-gray-900 text-white"
+        theme === "light" ? "bg-white text-black" : "bg-gray-900 text-white"
       } min-h-screen`}
     >
-      <aside className="w-1/5 bg-gray-800 p-4 ">
-        <h2 className="text-xl text-white font-semibold mb-4">Admin Panel</h2>
-        <ul>
-          <li className="mb-2">
-            <button
-              onClick={handleThemeToggle}
-              className={`p-2 m-3 ${
-                theme === "light"
-                  ? "bg-black text-white"
-                  : "bg-white text-black"
-              }  rounded `}
-            >
-              {theme === "light" ? "dark Theme" : "light Theme"}
-            </button>
-          </li>
-          <li className="mb-2 flex flex-col gap-3 ">
-            <div>
-              <button className="p-2 w-11/12 bg-blue-500 text-white rounded">
-                <a href="#addProduct" className="text-white w-full ">
-                  Add Products
-                </a>
-              </button>
-            </div>
-          </li>
-          <li className="mb-2">
-            <button className="p-2 w-11/12 bg-blue-500 text-white rounded">
-              <a href="#products" className="text-white w-full ">
-                Show Products
-              </a>
-            </button>
-          </li>
-        </ul>
-      </aside>
-      <div id="addProduct" className="w-full overflow-y-scroll ">
+      <Sidebar theme={theme} handleThemeToggle={handleThemeToggle} />
+
+      <div className="w-full overflow-y-scroll">
         <main className="flex-1 p-8">
-          <section id="add-product" className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">
-              {isEditing ? "Edit Product" : "Add New Product"}
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <input
-                type="text"
-                name="title"
-                value={product.title}
-                onChange={handleInputChange}
-                placeholder="Product Title"
-                className="p-2 border rounded w-full"
-                required
-              />
-              <textarea
-                name="description"
-                value={product.description}
-                onChange={handleInputChange}
-                placeholder="Product Description"
-                className="p-2 border rounded w-full"
-                required
-              />
-              <input
-                type="file"
-                onChange={handleFileChange}
-                className="border rounded w-full"
-                required={!isEditing} // Don't require image input while editing
-              />
-              {product.image && (
-                <img
-                  src={product.image}
-                  alt="Product"
-                  className="w-32 h-32 object-cover my-2"
-                />
-              )}
-              <input
-                type="number"
-                name="price"
-                value={product.price}
-                onChange={handleInputChange}
-                placeholder="Product Price"
-                className="p-2 border rounded w-full"
-                required
-              />
-              <button
-                type="submit"
-                className="p-2 bg-blue-500 text-white rounded"
-              >
-                {isEditing ? "Update Product" : "Add Product"}
-              </button>
-            </form>
-          </section>
-          <section id="products">
-            <h2 className="text-2xl font-semibold mb-4">Products List</h2>
-            {products.length === 0 ? (
-              <p>No products added yet.</p>
-            ) : (
-              <ul className="space-y-4">
-                {products.map((prod, index) => (
-                  <li
-                    key={index}
-                    className="border flex justify-between p-4 rounded"
-                  >
-                    <div className="w-full flex justify-between">
-                      <div>
-                        {prod.image && (
-                          <img
-                            src={prod.image}
-                            alt={prod.title}
-                            className="w-32 h-32 object-cover my-2"
-                          />
-                        )}
-                      </div>
-                      <div className="w-4/5 flex justify-between">
-                        <div>
-                          <h3 className="font-bold">Name: {prod.title}</h3>
-                          <p className="w-full">
-                            Description: {prod.description}
-                          </p>
-                          <p className="font-bold">Price: {prod.price}</p>
-                        </div>
-                        <div className="flex flex-col">
-                          <button
-                            className="bg-green-500 m-2 text-center text-white w-24 h-9"
-                            onClick={() => handleEdit(index)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            className="bg-red-600 text-center w-auto h-9 text-white"
-                            onClick={() => handleDelete(index)}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+          <ProductForm
+            product={product}
+            setProduct={setProduct}
+            isEditing={isEditing}
+            handleSubmit={handleSubmit}
+          />
+          
+          <ProductList
+            products={products}
+            handleEdit={handleEdit}
+            handleDelete={handleDelete}
+          />
         </main>
       </div>
     </div>

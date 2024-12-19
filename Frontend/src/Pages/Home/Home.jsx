@@ -1,7 +1,7 @@
 import React from "react";
 
 import Carousel from "../../components/Carousel";
-import NewArrived from "../../components/NewArrived";
+import AllProductPage from "../../components/AllProductPage";
 
 function Home() {
   return (
@@ -10,7 +10,7 @@ function Home() {
         <Carousel />
       </div>
       <div className="">
-        <NewArrived />
+        <AllProductPage />
       </div>
     </>
   );

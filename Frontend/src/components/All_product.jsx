@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import ProductCard from "./ProductCard"; // Adjust the path according to your structure
 
-function NewArrived() {
-   const [products, setProducts] = useState([]);
+const AllProductCards = () => {
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState(""); // State for search query
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -25,6 +27,11 @@ function NewArrived() {
     fetchProducts();
   }, []);
 
+  // Filter products based on search query
+  const filteredProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   if (loading) {
     return <p>Loading products...</p>;
   }
@@ -33,31 +40,26 @@ function NewArrived() {
     return <p>Error: {error}</p>;
   }
 
+const  handlclick = ()=>{
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth", // Add smooth scrolling
+    });
+  }
+
   return (
     <div className="p-8">
-           <div className="flex justify-between items-center mb-6">
-        <input
-          type="text"
-          placeholder="Search for anything..."
-          className="p-2 border rounded w-1/3"
-        />
-        <select className="p-2 border rounded">
-          <option>Most Popular</option>
-          <option>Price: Low to High</option>
-          <option>Price: High to Low</option>
-        </select>
-      </div>
+      <h1 className="text-3xl m-3">All Products</h1>
 
-      {/* Product Display */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 cursor-pointer">
-        {products.map((product) => (
-          <Link to={`/product/${product._id}`} key={product._id}>
+        {filteredProducts.map((product) => (
+          <Link to={`/product/${product._id}`} onClick={handlclick} key={product._id}>
             <ProductCard product={product} />
           </Link>
         ))}
       </div>
     </div>
   );
-}
+};
 
-export default NewArrived;
+export default AllProductCards;

@@ -1,6 +1,8 @@
 import React, { useState } from "react";
+import { toast } from "react-toastify";
 
 const Register = ({ toggleAuthMode }) => {
+  const [username, setusername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -9,36 +11,46 @@ const Register = ({ toggleAuthMode }) => {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      console.log("Passwords do not match");
+      toast.warning("Passwords do not match");
       return;
     }
 
-    // Replace with your API call logic
-    const response = await fetch("/api/register", {
+    const response = await fetch("http://localhost:5000/api/users/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ username, email, password }),
     });
 
     const data = await response.json();
-    if (data.success) {
+    if (data) {
+      toast.success("Registration succseefull");
       console.log("Registration Successful");
-      // Handle successful registration
-    } else {
-      console.log("Registration Failed");
-      // Handle registration failure
     }
-  };
+     else {
+      toast.error("Registration Failed");
+      console.log("Registration Failed");
+      }
+  }
 
   return (
-    <div className="flex justify-center items-center flex-col p-10">
-      <div className="bg-white p-8 rounded-lg shadow-md w-96 ">
-        <h2 className="text-2xl font-bold mb-6 text-gray-800 flex  justify-center">
+    <div className="flex justify-center items-center min-h-screen p-4 bg-gray-100">
+      <div className="bg-white p-6 md:p-8 rounded-lg shadow-md w-full max-w-md">
+        <h2 className="text-2xl font-bold mb-6 text-gray-800 text-center">
           Register
         </h2>
         <form onSubmit={handleRegister}>
+          <div className="mb-4">
+            <label className="block text-gray-700">username</label>
+            <input
+              type="text"
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={username}
+              onChange={(e) => setusername(e.target.value)}
+              required
+            />
+          </div>
           <div className="mb-4">
             <label className="block text-gray-700">Email</label>
             <input
@@ -76,7 +88,7 @@ const Register = ({ toggleAuthMode }) => {
             Register
           </button>
         </form>
-        <p className="mt-4 text-gray-600">
+        <p className="mt-4 text-gray-600 text-center">
           Already have an account?{" "}
           <button className="text-blue-500 underline" onClick={toggleAuthMode}>
             Login

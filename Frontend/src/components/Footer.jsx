@@ -3,7 +3,7 @@ import React from "react";
 const FooterWithoutLink = () => {
   return (
     <footer className="bg-gray-900 text-gray-300 py-10">
-      <div className="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-[50px] px-4 ">
+      <div className="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-[50px] px-4">
         {/* Logo and Contact Information */}
         <div>
           <h2 className="text-white font-bold text-xl mb-4">Tuski</h2>
@@ -49,7 +49,7 @@ const FooterWithoutLink = () => {
 
       {/* Footer Bottom */}
       <div className="text-center mt-8 border-t border-gray-700 pt-4">
-        <p>Tuski - eCommerce . Developed by Fascave IT Solutions</p>
+        <p>Tuski - eCommerce. Developed by Fascave IT Solutions</p>
       </div>
     </footer>
   );
